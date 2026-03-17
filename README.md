@@ -13,6 +13,10 @@ This app is used to control and operate machines and robots using many types of 
 - [Grafana Alerts Log](#grafana-alerts-log)
 - [8-Axis Machine Panel](#8-axis-machine-panel)
 - [Measurement Tool](#measurement-tool)
+- [Coordinate Panel](#coordinate-panel)
+- [Actuator Calibration Panel](#actuator-calibration-panel)
+- [Robot Localization Panel](#robot-localization-panel)
+- [Message to Slack](#message-to-slack)
 - [Voice Chat](#voice-chat)
 - [Web Browser Panels](#web-browser-panels)
 - [Screen Sharing](#screen-sharing)
@@ -27,11 +31,18 @@ This app is used to control and operate machines and robots using many types of 
 The April Tag Panel is the main hub of the app. From here you can open all other panels and features.
 
 - Press **Open TCP & Teleop Panel** to open the robot control panel.
-- Press **Open 8 Axis Panel** to open the machine axis control panel.
+- Press **It Axis** (8-Axis) to open the machine axis control panel.
+- Press **Actuator** to open the Actuator Calibration panel.
 - Press **Scan Robot** to identify a robot by looking at its AprilTag.
+- Press **Open Robot Localization Panel** to browse and select a robot from the directory.
 - Press **Open Grafana Logs** to view infrastructure and robot alerts.
-- Press **Open Browser** to open a web browser panel.
-- Press **Measurement Tool** to enter measurement mode.
+- Press **Browser** to open a web browser panel.
+- Press **Send Image** to capture and send the current camera view.
+- Press **Coordinate Panel** to view the measurement coordinate table.
+- Press **Delete All Measurements** to clear all placed measurement points.
+- Press **Message to Slack** to send a message to your team's Slack channel.
+- Press **Reconnect Voice** if voice chat drops and needs to be re-established.
+- Press **Mute** to toggle your microphone on/off.
 
 ---
 
@@ -355,6 +366,98 @@ The Measurement Tool lets you place and measure distances between physical point
 - Measurements are displayed in the headset as floating labels.
 - The undo system supports multiple levels — you can undo one step at a time.
 - Measurement data stays in the session until you clear it or leave.
+
+---
+
+## Coordinate Panel
+
+The Coordinate Panel shows a live table of all measurement points you have placed, including their exact 3D position and orientation in the world.
+
+### What It Shows
+
+Each pair of measurement points creates three rows in the table:
+
+| Column | Description |
+|---|---|
+| **Point** | Point label (e.g. P1, P2) |
+| **X / Y / Z** | World-space position in metres |
+| **Yaw / Pitch / Roll** | Orientation in degrees |
+| **Length** | Distance between the two points (shown on the difference row) |
+
+Each point is colour-coded to match the coloured dot placed in the scene. The difference row (e.g. "P1–P2") shows the delta between the two points and the measured length.
+
+### How to Use
+
+1. Open **Measurement Tool** and place at least two points to create a measurement line.
+2. Press **Coordinate Panel** on the main panel to open the table.
+3. The table fills automatically as you place more points.
+4. Scroll the table to review all points.
+5. When you **Undo** or **Clear** measurements, their rows are removed from the table automatically.
+
+---
+
+## Actuator Calibration Panel
+
+The Actuator Panel is used to calibrate linear actuators on machines. It uses the Measurement Tool to capture the real-world distance from the motor to the centre point, then sends that value to the machine backend for automated calibration.
+
+### How It Works (Two-Step Calibration)
+
+**Step 1 — Initial measurement:**
+1. Press **Actuator** on the main panel to open the Actuator Calibration Panel.
+2. Use the Measurement Tool to draw a line from the **motor** to the **centre point** of the actuator.
+3. The measured distance appears in the panel.
+4. Press **Send** — the backend receives the measurement and commands the actuator to move to that position.
+5. Status will show: *"Actuator should move now — draw Motor To Center measurement again"*.
+
+**Step 2 — Final measurement (after actuator moves):**
+1. Once the actuator has moved, draw the **same Motor to Center measurement again**.
+2. Press **Send** again — this confirms the final position to the backend.
+3. Status shows: **CALIBRATION COMPLETE**.
+
+### Other Controls
+
+- **Clear** (slots 1 / 2) — removes a measurement from that slot so you can re-draw it.
+- **Restart** — resets the entire calibration back to Step 1.
+- **IP / Port fields** — set the backend controller address (default IP **10.11.16.129**, port **8002**).
+- **Steps field** — number of steps for the calibration move (default **5000**).
+
+> If the Send fails (connection error), the status will show the error. Fix the connection and press Send again — no need to re-draw the measurement.
+
+---
+
+## Robot Localization Panel
+
+The Robot Localization Panel shows a scrollable list of all robots registered in the Robot Directory. Use it to browse robots and bind one to your current session without needing to scan an AprilTag.
+
+### What It Shows
+
+- A scrollable list of all robots fetched from the `robot_resolver` service.
+- Each row shows the **robot name** and its **IP address**.
+
+### How to Use
+
+1. Press **Open Robot Localization Panel** on the main panel.
+2. The list loads automatically. Press **Refresh** if you want the latest data.
+3. Tap a robot row to select it — its IP is applied to the teleop connection config.
+4. All panels (TCP/Teleop, etc.) will now communicate with that robot.
+
+> This is an alternative to scanning a physical AprilTag — useful when the tag is not visible or not in range.
+
+---
+
+## Message to Slack
+
+You can send a freeform text message to your team's Slack channel directly from inside the headset.
+
+### How to Use
+
+1. Press **Message to Slack** on the main panel.
+2. A VR keyboard panel opens.
+3. Type your message using the virtual keyboard.
+4. Press **Send** — the message is posted to the configured Slack channel via the notification service.
+5. Status shows **Sent** on success, or **Failed** if the server is not reachable.
+
+> Requires the notification service to be running on the local network (default: **10.11.16.50:8083**).
 
 ---
 
